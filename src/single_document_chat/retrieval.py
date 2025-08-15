@@ -13,8 +13,11 @@ from exception.custom_exception import DocumentPortalException
 from logger.custom_logger import CustomLogger
 from prompt.prompt_library import PROMPT_REGISTRY
 from model.models import PromptType
+import pickle
+
 
 load_dotenv()
+SESSION_FILE = "session_store.pkl"
 
 class ConversationalRAG:
     def __init__(self, session_id: str, retriever):
@@ -58,18 +61,46 @@ class ConversationalRAG:
             self.log.error("Error loading LLM via ModelLoader", error=str(e))
             raise DocumentPortalException("Failed to load LLM", sys)
 
-    def _get_session_history(self, session_id: str) -> BaseChatMessageHistory:
+    def _get_session_history(self, session_id: str):
+        """
+        Returns a ChatMessageHistory object for the given session_id.
+        Works in both Streamlit (st.session_state) and plain Python scripts (with pickle-based persistence).
+        """
         try:
-            if "store" not in st.session_state:
-                st.session_state.store = {}
+            # --- Streamlit environment ---
+            if "streamlit" in sys.modules:
+                try:
+                    if not hasattr(st, "session_state"):
+                        st.session_state = {}
+                    if "store" not in st.session_state:
+                        st.session_state.store = {}
+                    if session_id not in st.session_state.store:
+                        st.session_state.store[session_id] = ChatMessageHistory()
+                        self.log.info("New chat session history created (Streamlit)", session_id=session_id)
+                    return st.session_state.store[session_id]
+                except Exception as e:
+                    # If Streamlit fails (e.g., running outside Streamlit), fallback to pickle
+                    self.log.warning("Streamlit session_state unavailable, using file-based session", error=str(e))
 
-            if session_id not in st.session_state.store:
-                st.session_state.store[session_id] = ChatMessageHistory()
-                self.log.info("New chat session history created", session_id=session_id)
+            # --- Plain Python / script environment ---
+            if os.path.exists(SESSION_FILE):
+                with open(SESSION_FILE, "rb") as f:
+                    session_store = pickle.load(f)
+            else:
+                session_store = {}
 
-            return st.session_state.store[session_id]
+            if session_id not in session_store:
+                session_store[session_id] = ChatMessageHistory()
+                self.log.info("New chat session history created (script)", session_id=session_id)
+
+            # Persist updated store
+            with open(SESSION_FILE, "wb") as f:
+                pickle.dump(session_store, f)
+
+            return session_store[session_id]
+
         except Exception as e:
-            self.log.error("Failed to access session history", session_id=session_id, error=str(e))
+            self.log.error("Failed to retrieve session history", session_id=session_id, error=str(e))
             raise DocumentPortalException("Failed to retrieve session history", sys)
 
     def load_retriever_from_faiss(self, index_path: str):
