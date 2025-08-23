@@ -6,10 +6,9 @@ from langchain.schema import Document
 from langchain_community.document_loaders import PyPDFLoader, Docx2txtLoader, TextLoader
 from logger.custom_logger import CustomLogger
 from exception.custom_exception import DocumentPortalException
-
 log = CustomLogger().get_logger(__name__)
-
 SUPPORTED_EXTENSIONS = {".pdf", ".docx", ".txt"}
+
 
 def load_documents(paths: Iterable[Path]) -> List[Document]:
     """Load docs using appropriate loader based on extension."""
