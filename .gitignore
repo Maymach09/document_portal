@@ -6,5 +6,6 @@ __pycache__/
 logs/
 *.pyc
 archive/
+.vscode/
 # Ignore all auto-created session folders inside data/
 data/session_*/
