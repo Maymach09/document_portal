@@ -8,7 +8,7 @@ env:
   AWS_REGION: us-east-2
   ECR_REPOSITORY: documentportalapp
   ECS_SERVICE: document-portal-service
-  ECS_CLUSTER: document-portal-app-cluster
+  ECS_CLUSTER: document-portal-cluster
   ECS_TASK_DEFINITION: .github/workflows/task_definition.json
   CONTAINER_NAME: document-portal-container
 
@@ -51,7 +51,7 @@ jobs:
       - name: Build and Push Docker Image
         id: build-image
         env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry  }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
           IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
