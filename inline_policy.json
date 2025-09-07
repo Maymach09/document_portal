@@ -23,7 +23,7 @@
 			"Sid": "Statement1",
 			"Effect": "Allow",
 			"Action": "secretsmanager:GetSecretValue",
-			"Resource": "arn:aws:secretsmanager:us-east-2:480831398561:secret:api_keys-nZTtj8*"
+			"Resource": "arn:aws:secretsmanager:us-east-2:480831398561:secret:api_keys-O3j1m4*"
 		}
 	]
 }
